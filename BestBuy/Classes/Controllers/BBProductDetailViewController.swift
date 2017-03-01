@@ -67,16 +67,16 @@ class BBProductDetailViewController: UIViewController
     
     @IBAction func accessoriesButtonClicked(_ sender: Any)
     {
-//        guard let selectedProduct = selectedProduct, let accessory_SKUs = selectedProduct.accessory_SKUs, accessory_SKUs.count > 0 else
-//        {
-//            let noAccessoriesAlert = UIAlertController(title: "No Accessories found for this product", message: "This product has no accessories on record.", preferredStyle: .alert)
-//            
-//            noAccessoriesAlert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-//            
-//            present(noAccessoriesAlert, animated: true, completion: nil)
-//            
-//            return
-//        }
+        guard let selectedProduct = selectedProduct, let accessory_SKUs = selectedProduct.accessory_SKUs, accessory_SKUs.count > 0 else
+        {
+            let noAccessoriesAlert = UIAlertController(title: "No Accessories found for this product", message: "This product has no accessories on record.", preferredStyle: .alert)
+            
+            noAccessoriesAlert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+            
+            present(noAccessoriesAlert, animated: true, completion: nil)
+            
+            return
+        }
         
         performSegue(withIdentifier: accessoryProductGridSegue, sender: self)
     }
@@ -174,9 +174,7 @@ class BBProductDetailViewController: UIViewController
             let destination = segue.destination as? BBGridSelectorViewController,
             segue.identifier == accessoryProductGridSegue
         {
-            //TODO - remove
-//            destination.SKUList         = selectedProduct.accessory_SKUs
-            destination.SKUList         = selectedProduct.related_product_SKUs
+            destination.SKUList         = selectedProduct.accessory_SKUs
         }
     }
 }

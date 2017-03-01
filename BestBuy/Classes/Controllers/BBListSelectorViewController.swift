@@ -34,7 +34,7 @@ class BBListSelectorViewController: UIViewController
     
     let itemCellID                  = "itemCellID"
     let emptyCellID                 = "emptyCellID"
-    let itemCellHeight              : CGFloat = 44
+    let itemCellHeight              : CGFloat = 60
     let emptyCellHeight             : CGFloat = 0
     
     let relatedProductDetailSegue   = "relatedProductDetailSegue"
@@ -214,9 +214,31 @@ extension BBListSelectorViewController: UITableViewDataSource
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell
     {
         let cell                = tableView.dequeueReusableCell(withIdentifier: itemCellID, for: indexPath) as? UITableViewCell
-        let item                = itemsList[indexPath.row]
-        
-        cell?.textLabel?.text   = item.name
+       
+        if let product = itemsList[indexPath.row] as? BBProduct,
+            let sale_price = product.sale_price
+        {
+            cell?.textLabel?.text       = product.name
+            cell?.detailTextLabel?.text = "$\(sale_price.roundTo(places: 2))"
+            
+            if let thumbnail_image_URL = product.thumbnail_image_URL
+            {
+                DispatchQueue.main.async {
+                    
+                    cell?.imageView?.kf.setImage(with: URL(string: thumbnail_image_URL), placeholder: nil, options: nil, progressBlock: nil) { Image, error, cacheType, url in
+                        
+                        cell?.setNeedsLayout()
+                        
+                    }
+                }
+            }
+        }
+        else
+        {
+            let item = itemsList[indexPath.row]
+            
+            cell?.textLabel?.text = item.name
+        }
         
         return cell!
     }
