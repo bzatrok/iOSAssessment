@@ -19,7 +19,7 @@ class BBSearchViewController: UIViewController
     var currentPageNumber           = 1
     var isHTTPRequestInProgress     = false
     
-    var currentSearchButtonState    : BBSearchButtonState = .idle
+    var currentSearchButtonState    : BBSearchButtonState = .search
     
     let productCellID               = "productCell"
     let emptyCellID                 = "emptyCell"
@@ -51,7 +51,8 @@ class BBSearchViewController: UIViewController
     
     enum BBSearchButtonState: Int
     {
-        case idle
+        case search
+        case showAllFromCategory
         case searching
         case noResults
         
@@ -67,14 +68,30 @@ class BBSearchViewController: UIViewController
     
     @IBAction func searchButtonClicked(_ sender: Any)
     {
-        guard let searchBarText = searchBar.text, searchBarText.characters.count > 0 else
+        if let searchBarText = searchBar.text,
+            searchBarText.characters.count > 0,
+            BBFilterManager.shared.selectedTopLevelCategoryID == nil
+        {
+            fetchProducts(withSearchText: searchBarText, limitedToCategoryWithID: nil)
+        }
+        else if let searchBarText = searchBar.text,
+            searchBarText.characters.count > 0,
+            let selectedCategoryID = BBFilterManager.shared.selectedTopLevelCategoryID
+        {
+            fetchProducts(withSearchText: searchBarText, limitedToCategoryWithID: selectedCategoryID)
+        }
+        else if let selectedCategoryID = BBFilterManager.shared.selectedTopLevelCategoryID
+        {
+            fetchProducts(withSearchText: nil, limitedToCategoryWithID: selectedCategoryID)
+        }
+        else
         {
             searchBar.becomeFirstResponder()
             return
         }
         
         setSearchButtonState(.searching)
-        fetchProducts(withSearchText: searchBarText)
+        
         tableView.scrollToTop()
         
         if searchBar.isFirstResponder
@@ -112,16 +129,25 @@ class BBSearchViewController: UIViewController
         
         //Add category filter button
         
-        let categoriesButton = UIBarButtonItem(title: "Categories", style: .plain, target: self, action: #selector(categoriesButtonClicked))
+        //Disabled for now, BestBuy cannot filter products based on top level categories only
         
-        navigationItem.setRightBarButtonItems([categoriesButton], animated: true)
+//        let categoriesButton = UIBarButtonItem(title: "Categories", style: .plain, target: self, action: #selector(categoriesButtonClicked))
+//        
+//        navigationItem.setRightBarButtonItems([categoriesButton], animated: true)
     }
     
     func setupView()
     {
-        //Search Button
-        setSearchButtonState(.idle)
-        
+        setSearchButtonState(.search)
+    
+        if let _ = BBFilterManager.shared.selectedTopLevelCategoryID,
+            let searchBar = searchBar,
+            let searchBarText = searchBar.text,
+            searchBarText.characters.count == 0
+        {
+            setSearchButtonState(.showAllFromCategory)
+        }
+    
         //Set prompt text on searchbar (changes if filtering is enabled)
         let selectedCategory    = BBFilterManager.shared.selectedTopLevelCategoryName != nil ? "the '\(BBFilterManager.shared.selectedTopLevelCategoryName!)' category" : "BestBuy's products"
         
@@ -143,9 +169,14 @@ class BBSearchViewController: UIViewController
                         self.searchButton.setTitle("Searching...", for: .normal)
                         self.searchButton.setBackgroundImage(UIImage(color: BBColors.red), for: .normal)
                         
-                    case .idle:
+                    case .search:
                         
                         self.searchButton.setTitle("Search", for: .normal)
+                        self.searchButton.setBackgroundImage(UIImage(color: BBColors.blue), for: .normal)
+                    
+                    case .showAllFromCategory:
+                        
+                        self.searchButton.setTitle("Show all from Category", for: .normal)
                         self.searchButton.setBackgroundImage(UIImage(color: BBColors.blue), for: .normal)
                     
                     case .noResults:
@@ -180,13 +211,28 @@ class BBSearchViewController: UIViewController
     
     //MARK: Fetch products
     
-    func fetchProducts(withSearchText searchText: String)
+    func fetchProducts(withSearchText searchText: String?, limitedToCategoryWithID: String?)
     {
-        BBRequestManager.shared.queryProducts(withSearchString: searchText, selectedCategoryID: BBFilterManager.shared.selectedTopLevelCategoryID, currentPageNumber: currentPageNumber) { [weak self] success, responseProductsList in
+        if searchText == nil && limitedToCategoryWithID == nil
+        {
+            setSearchButtonState(.search)
+            searchButton.becomeFirstResponder()
+            return
+        }
+        
+        BBRequestManager.shared.queryProducts(withSearchString: searchText, selectedCategoryID: limitedToCategoryWithID, currentPageNumber: currentPageNumber) { [weak self] success, responseProductsList in
             
-            self?.setSearchButtonState(.idle)
+            if let _ = BBFilterManager.shared.selectedTopLevelCategoryID
+            {
+                self?.setSearchButtonState(.showAllFromCategory)
+            }
+            else
+            {
+                self?.setSearchButtonState(.search)
+            }
             
-            guard let strongSelf = self, let responseProductsList = responseProductsList, success else
+            guard let strongSelf = self,
+                let responseProductsList = responseProductsList, success else
             {
                 self?.setSearchButtonState(.noResults)
                 return
@@ -208,7 +254,7 @@ extension BBSearchViewController: UISearchBarDelegate
 {
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar)
     {
-        setSearchButtonState(.idle)
+        setSearchButtonState(.search)
     }
     
     func searchBarTextDidEndEditing(_ searchBar: UISearchBar)
@@ -216,6 +262,23 @@ extension BBSearchViewController: UISearchBarDelegate
         if searchBar.isFirstResponder
         {
             searchBar.resignFirstResponder()
+        }
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String)
+    {
+        guard searchText.characters.count == 0 else
+        {
+            return
+        }
+        
+        if let _ = BBFilterManager.shared.selectedTopLevelCategoryID
+        {
+            setSearchButtonState(.showAllFromCategory)
+        }
+        else
+        {
+            setSearchButtonState(.search)
         }
     }
 }

@@ -10,10 +10,16 @@ import Foundation
 
 struct BBURLRoutes
 {
+    //Base Routes
     static let baseAPIURL                   = "https://api.bestbuy.com/v1"
     static let productsAPIURL               = "\(baseAPIURL)/products"
     static let categoriesAPIURL             = "\(baseAPIURL)/categories"
-    static let allTopLevelCategoriesAPIURL  = "\(categoriesAPIURL)(id=abcat*)?apiKey=\(BBConstants.APIKey)&pageSize=50&show=id,name&format=json"
+    
+    //All top level categories
+    static func allTopLevelCategoriesAPIURLWithPagination(currentPageNumber: Int) -> String
+    {
+        return "\(categoriesAPIURL)(id=abcat*)?apiKey=\(BBConstants.APIKey)&pageSize=\(BBConstants.numberOfProductsPerPage)&show=id,name&format=json&page=\(currentPageNumber)"
+    }
     
     static func productsWithSKUs(skuList: [Int]) -> String
     {
@@ -29,14 +35,16 @@ struct BBURLRoutes
         return "\(productsAPIURL)(sku%20in%20(\(SKU)))?apiKey=\(BBConstants.APIKey)&show=relatedProducts.sku&pageSize=50&format=json"
     }
     
-    static func productSearchAPIURL(searchString: String, selectedCategoryID: String?, currentPageNumber: Int) -> String
+    static func productSearchAPIURL(searchString: String?, selectedCategoryID: String?, currentPageNumber: Int) -> String
     {
-        let selectedCategoryString  = selectedCategoryID != nil ? "&(categoryPath.id=\(selectedCategoryID!))" : ""
+        let selectedCategoryString  = selectedCategoryID != nil ? "(categoryPath.id=\(selectedCategoryID!))" : ""
+        let selectedSearchString    = searchString != nil ? "(search=\(searchString!))" : ""
+        let ampersand               = selectedCategoryString.characters.count > 0 && selectedSearchString.characters.count > 0 ? "&" : ""
         
-        let selectedSearchString    = selectedCategoryString.characters.count > 0 ? "(search=\(searchString))" : "search=\(searchString)"
-        
-        return "\(productsAPIURL)(\(selectedSearchString)\(selectedCategoryString))?apiKey=\(BBConstants.APIKey)&sort=name.asc&show=name,categoryPath.id,categoryPath.name,shortDescription,sku,relatedProducts.sku,accessories.sku,thumbnailImage,image,customerReviewAverage,customerReviewCount,regularPrice,onSale,salePrice&pageSize=\(BBConstants.numberOfProductsPerPage)&format=json&page=\(currentPageNumber)"
+        return "\(productsAPIURL)(\(selectedSearchString)\(ampersand)\(selectedCategoryString))?apiKey=\(BBConstants.APIKey)&sort=name.asc&show=name,categoryPath.id,categoryPath.name,shortDescription,sku,relatedProducts.sku,accessories.sku,thumbnailImage,image,customerReviewAverage,customerReviewCount,regularPrice,onSale,salePrice&pageSize=\(BBConstants.numberOfProductsPerPage)&format=json&page=\(currentPageNumber)"
     }
+    
+    
     
     static func categorySearchAPIURL(searchString: String, currentPageNumber: Int) -> String
     {

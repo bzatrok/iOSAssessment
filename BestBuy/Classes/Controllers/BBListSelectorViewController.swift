@@ -30,6 +30,9 @@ class BBListSelectorViewController: UIViewController
     
     var currentState                : BBListSelectorState?
     
+    var currentPageNumber           = 1
+    var isHTTPRequestInProgress     = false
+    
     var selectedItem                : BBObject?
     
     let itemCellID                  = "itemCellID"
@@ -103,13 +106,14 @@ class BBListSelectorViewController: UIViewController
                 
             case .categories:
                 
-                BBRequestManager.shared.queryCategories { [weak self] success, responseCategories in
+                BBRequestManager.shared.queryCategories(currentPageNumber: currentPageNumber) { [weak self] success, responseCategories in
                     
                     guard let strongSelf = self, let responseCategories = responseCategories, success else
                     {
                         return
                     }
                     strongSelf.itemsList = responseCategories
+                    strongSelf.currentPageNumber += 1
                     
                     DispatchQueue.main.async {
                         strongSelf.tableView.reloadAnimated()
@@ -151,6 +155,65 @@ class BBListSelectorViewController: UIViewController
         }
         
         destination.selectedProduct = selectedProduct
+    }
+}
+
+//MARK: UIScrollViewDelegate
+
+extension BBListSelectorViewController: UIScrollViewDelegate
+{
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool)
+    {
+        guard let currentState = currentState,
+            let guardedState = BBListSelectorState(rawValue: currentState.rawValue) else
+        {
+            return
+        }
+        
+        switch guardedState
+        {
+            case .categories:
+            
+                if ((tableView.contentOffset.y + tableView.frame.size.height) >= tableView.contentSize.height - itemCellHeight)
+                {
+                    isHTTPRequestInProgress = true
+                    
+                    BBRequestManager.shared.queryCategories(currentPageNumber: self.currentPageNumber) { [weak self] success, responseCategoryList in
+                        
+                        self?.isHTTPRequestInProgress = false
+                        
+                        guard let strongSelf = self, let responseCategoryList = responseCategoryList, success else
+                        {
+                            return
+                        }
+                        
+                        DispatchQueue.main.async {
+                            
+                            strongSelf.currentPageNumber += 1
+                            
+                            strongSelf.tableView.beginUpdates()
+                            
+                            let insertIndex = strongSelf.itemsList.count - 1
+                            var indexPaths  : [IndexPath] = []
+                            
+                            for index in insertIndex...insertIndex + responseCategoryList.count - 1
+                            {
+                                indexPaths.append(IndexPath(row: index, section: 0))
+                            }
+                            
+                            strongSelf.itemsList = strongSelf.itemsList + responseCategoryList
+                            
+                            strongSelf.tableView.insertRows(at: indexPaths, with: .automatic)
+                            strongSelf.tableView.endUpdates()
+                            
+                            strongSelf.tableView.setNeedsLayout()
+                        }
+                    }
+                }
+                
+            default:
+                break
+        }
     }
 }
 

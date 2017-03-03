@@ -65,21 +65,31 @@ class BBRequestManager
     /**
      Queries Products from Best Buy API using Search String
      
-     - parameter searchString:  search string to search products against
+     - parameter searchString:  search string to search products against (optional)
      - parameter selectedCategoryID: category ID to filter products search into (optional)
      - parameter currentPageNumber: page number of search results, for pagination
      - parameter completion: completion block with success bool and optinal array of BBProducts return
      */
-    func queryProducts(withSearchString searchString: String, selectedCategoryID: String?, currentPageNumber: Int, completion: @escaping (_ success: Bool, _ responseProductList: [BBProduct]?) -> Void)
+    func queryProducts(withSearchString searchString: String?, selectedCategoryID: String?, currentPageNumber: Int, completion: @escaping (_ success: Bool, _ responseProductList: [BBProduct]?) -> Void)
     {
-        var URLString = BBURLRoutes.productSearchAPIURL(searchString: searchString, selectedCategoryID: nil, currentPageNumber: currentPageNumber)
+        var URLString : String?
         
-        if let selectedCategoryID = selectedCategoryID
+        if let searchString = searchString, let selectedCategoryID = selectedCategoryID
         {
             URLString = BBURLRoutes.productSearchAPIURL(searchString: searchString, selectedCategoryID: selectedCategoryID, currentPageNumber: currentPageNumber)
         }
+        else if let searchString = searchString
+        {
+            URLString = BBURLRoutes.productSearchAPIURL(searchString: searchString, selectedCategoryID: nil, currentPageNumber: currentPageNumber)
+        }
+        else if let selectedCategoryID = selectedCategoryID
+        {
+            URLString = BBURLRoutes.productSearchAPIURL(searchString: nil, selectedCategoryID: selectedCategoryID, currentPageNumber: currentPageNumber)
+        }
         
-        guard let URL = URL(string: URLString) else
+        guard let strongURLString = URLString,
+            strongURLString.characters.count > 0,
+            let URL = URL(string: strongURLString) else
         {
             completion(false, nil)
             return
@@ -113,9 +123,9 @@ class BBRequestManager
      
      - parameter completion: completion block with success bool and optinal array of BBCategories return
      */
-    func queryCategories(completion: @escaping (_ success: Bool, _ responseCategoryList: [BBCategory]?) -> Void)
+    func queryCategories(currentPageNumber: Int, completion: @escaping (_ success: Bool, _ responseCategoryList: [BBCategory]?) -> Void)
     {
-        guard let URL = URL(string: BBURLRoutes.allTopLevelCategoriesAPIURL) else
+        guard let URL = URL(string: BBURLRoutes.allTopLevelCategoriesAPIURLWithPagination(currentPageNumber: currentPageNumber)) else
         {
             completion(false, nil)
             return
