@@ -129,6 +129,10 @@ class BBProductDetailViewController: UIViewController
         {
             productRatingCountLabel.text = "Rated \(customer_review_average) on average, by \(customer_review_count) customers"
         }
+        else
+        {
+            productRatingCountLabel.text = "No yer rated"
+        }
         
         onSaleView.isHidden = true
         

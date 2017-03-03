@@ -95,7 +95,10 @@ class BBListSelectorViewController: UIViewController
                         return
                     }
                     strongSelf.itemsList = productsList
-                    strongSelf.tableView.reloadAnimated()
+                    
+                    DispatchQueue.main.async {
+                        strongSelf.tableView.reloadAnimated()
+                    }
                 }
                 
             case .categories:
@@ -107,7 +110,10 @@ class BBListSelectorViewController: UIViewController
                         return
                     }
                     strongSelf.itemsList = responseCategories
-                    strongSelf.tableView.reloadAnimated()
+                    
+                    DispatchQueue.main.async {
+                        strongSelf.tableView.reloadAnimated()
+                    }
                 }
                 
                 let clearFilterButton   = UIBarButtonItem(title: "Clear Filter", style: .plain, target: self, action: #selector(clearFilterButtonClicked))
@@ -223,12 +229,10 @@ extension BBListSelectorViewController: UITableViewDataSource
             
             if let thumbnail_image_URL = product.thumbnail_image_URL
             {
-                DispatchQueue.main.async {
-                    
-                    cell?.imageView?.kf.setImage(with: URL(string: thumbnail_image_URL), placeholder: nil, options: nil, progressBlock: nil) { Image, error, cacheType, url in
-                        
+                cell?.imageView?.kf.setImage(with: URL(string: thumbnail_image_URL), placeholder: nil, options: nil, progressBlock: nil) { Image, error, cacheType, url in
+
+                    DispatchQueue.main.async {
                         cell?.setNeedsLayout()
-                        
                     }
                 }
             }

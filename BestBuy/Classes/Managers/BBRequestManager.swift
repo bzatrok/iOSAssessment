@@ -42,14 +42,14 @@ class BBRequestManager
                     return
                 }
                 
-                if let productsArray = productsDict["products"] as? [[String : AnyObject]]
+                if let productsArray = productsDict["products"] as? [[String : AnyObject]], productsArray.count > 0
                 {
                     let productsList = BBObjectFactory.createProductsList(fromProductArray: productsArray)
                     completion(true, productsList)
                 }
                 else
                 {
-                    completion(false, nil)
+                    completion(true, nil)
                 }
             }
             catch

@@ -99,13 +99,6 @@ class BBSearchViewController: UIViewController
         setupView()
     }
     
-    override func viewWillDisappear(_ animated: Bool)
-    {
-        super.viewWillDisappear(animated)
-        
-        navigationController?.setNavigationBarHidden(false, animated: true)
-    }
-    
     //MARK: Functions
     
     /**
@@ -119,18 +112,15 @@ class BBSearchViewController: UIViewController
         
         //Add category filter button
         
-//        let categoriesButton = UIBarButtonItem(title: "Categories", style: .plain, target: self, action: #selector(categoriesButtonClicked))
-//        
-//        navigationItem.setRightBarButtonItems([categoriesButton], animated: true)
+        let categoriesButton = UIBarButtonItem(title: "Categories", style: .plain, target: self, action: #selector(categoriesButtonClicked))
+        
+        navigationItem.setRightBarButtonItems([categoriesButton], animated: true)
     }
     
     func setupView()
     {
         //Search Button
         setSearchButtonState(.idle)
-        
-        //HIde navigation bar
-        navigationController?.setNavigationBarHidden(true, animated: true)
         
         //Set prompt text on searchbar (changes if filtering is enabled)
         let selectedCategory    = BBFilterManager.shared.selectedTopLevelCategoryName != nil ? "the '\(BBFilterManager.shared.selectedTopLevelCategoryName!)' category" : "BestBuy's products"
@@ -143,7 +133,7 @@ class BBSearchViewController: UIViewController
         currentSearchButtonState = toState
         
         DispatchQueue.main.async {
-            
+        
             UIView.animate(withDuration: 0.3) {
                 
                 switch toState
@@ -182,6 +172,10 @@ class BBSearchViewController: UIViewController
         {
             destination.selectedProduct = selectedProduct
         }
+        else if let destination = segue.destination as? BBListSelectorViewController
+        {
+            destination.currentState    = .categories
+        }
     }
     
     //MARK: Fetch products
@@ -198,7 +192,10 @@ class BBSearchViewController: UIViewController
                 return
             }
             strongSelf.productsList = responseProductsList
-            strongSelf.tableView.reloadAnimated()
+            
+            DispatchQueue.main.async {
+                strongSelf.tableView.reloadAnimated()
+            }
         }
     }
 }
@@ -229,7 +226,7 @@ extension BBSearchViewController: UIScrollViewDelegate
 {
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool)
     {
-        if ((tableView.contentOffset.y + tableView.frame.size.height) >= tableView.contentSize.height)
+        if ((tableView.contentOffset.y + tableView.frame.size.height) >= tableView.contentSize.height - productCellHeight)
         {
             if let searchBarText = searchBar.text, searchBarText.characters.count > 0, !isHTTPRequestInProgress
             {
@@ -244,22 +241,27 @@ extension BBSearchViewController: UIScrollViewDelegate
                         return
                     }
                     
-                    strongSelf.currentPageNumber += 1
+                    DispatchQueue.main.async {
                     
-                    strongSelf.tableView.beginUpdates()
-                    
-                    let insertIndex = strongSelf.productsList.count - 1
-                    var indexPaths  : [IndexPath] = []
+                        strongSelf.currentPageNumber += 1
                         
-                    for index in insertIndex...insertIndex + responseProductList.count - 1
-                    {
-                        indexPaths.append(IndexPath(row: index, section: 0))
+                        strongSelf.tableView.beginUpdates()
+                        
+                        let insertIndex = strongSelf.productsList.count - 1
+                        var indexPaths  : [IndexPath] = []
+                            
+                        for index in insertIndex...insertIndex + responseProductList.count - 1
+                        {
+                            indexPaths.append(IndexPath(row: index, section: 0))
+                        }
+                        
+                        strongSelf.productsList.append(contentsOf: responseProductList)
+                        
+                        strongSelf.tableView.insertRows(at: indexPaths, with: .automatic)
+                        strongSelf.tableView.endUpdates()
+                        
+                        strongSelf.tableView.setNeedsLayout()
                     }
-                    
-                    strongSelf.productsList.append(contentsOf: responseProductList)
-                    
-                    strongSelf.tableView.insertRows(at: indexPaths, with: .automatic)
-                    strongSelf.tableView.endUpdates()
                 }
             }
         }
@@ -328,14 +330,11 @@ extension BBSearchViewController: UITableViewDataSource
                 
                 if let thumbnail_image_URL = product.thumbnail_image_URL
                 {
-                    DispatchQueue.main.async {
-                        
-                        cell?.imageView?.kf.setImage(with: URL(string: thumbnail_image_URL), placeholder: nil, options: nil, progressBlock: nil) { Image, error, cacheType, url in
+                    cell?.imageView?.kf.setImage(with: URL(string: thumbnail_image_URL), placeholder: nil, options: nil, progressBlock: nil) { Image, error, cacheType, url in
                             
+                        DispatchQueue.main.async {
                             cell?.setNeedsLayout()
-                            
                         }
-                        
                     }
                 }
                 

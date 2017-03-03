@@ -31,9 +31,11 @@ struct BBURLRoutes
     
     static func productSearchAPIURL(searchString: String, selectedCategoryID: String?, currentPageNumber: Int) -> String
     {
-        let selectedCategoryString = selectedCategoryID != nil ? "&(categoryPath.id=\(selectedCategoryID!))" : ""
+        let selectedCategoryString  = selectedCategoryID != nil ? "&(categoryPath.id=\(selectedCategoryID!))" : ""
         
-        return "\(productsAPIURL)(search=\(searchString)\(selectedCategoryString))?apiKey=\(BBConstants.APIKey)&sort=name.asc&show=name,categoryPath.id,categoryPath.name,shortDescription,sku,relatedProducts.sku,accessories.sku,thumbnailImage,image,customerReviewAverage,customerReviewCount,regularPrice,onSale,salePrice&pageSize=\(BBConstants.numberOfProductsPerPage)&format=json&page=\(currentPageNumber)"
+        let selectedSearchString    = selectedCategoryString.characters.count > 0 ? "(search=\(searchString))" : "search=\(searchString)"
+        
+        return "\(productsAPIURL)(\(selectedSearchString)\(selectedCategoryString))?apiKey=\(BBConstants.APIKey)&sort=name.asc&show=name,categoryPath.id,categoryPath.name,shortDescription,sku,relatedProducts.sku,accessories.sku,thumbnailImage,image,customerReviewAverage,customerReviewCount,regularPrice,onSale,salePrice&pageSize=\(BBConstants.numberOfProductsPerPage)&format=json&page=\(currentPageNumber)"
     }
     
     static func categorySearchAPIURL(searchString: String, currentPageNumber: Int) -> String

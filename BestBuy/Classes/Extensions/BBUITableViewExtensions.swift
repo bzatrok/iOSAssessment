@@ -15,12 +15,12 @@ extension UITableView
      */
     func reloadAnimated()
     {
-        DispatchQueue.main.sync {
+        DispatchQueue.main.async {
             
-            beginUpdates()
-            let sections = NSIndexSet(indexesIn: NSMakeRange(0, numberOfSections))
-            reloadSections(sections as IndexSet, with: .fade)
-            endUpdates()
+            self.beginUpdates()
+            let sections = NSIndexSet(indexesIn: NSMakeRange(0, self.numberOfSections))
+            self.reloadSections(sections as IndexSet, with: .fade)
+            self.endUpdates()
         }
     }
     

@@ -123,9 +123,9 @@ extension BBGridSelectorViewController: UICollectionViewDataSource
         
         if let image_URL = product.image_URL
         {
-            DispatchQueue.main.async {
-                cell.backgroundImageView.kf.setImage(with: URL(string: image_URL), placeholder: nil, options: nil, progressBlock: nil) { Image, error, cacheType, url in
-                    
+            cell.backgroundImageView.kf.setImage(with: URL(string: image_URL), placeholder: nil, options: nil, progressBlock: nil) { Image, error, cacheType, url in
+                
+                DispatchQueue.main.async {
                     cell.setNeedsLayout()
                 }
             }
