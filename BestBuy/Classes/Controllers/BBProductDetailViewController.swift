@@ -131,7 +131,7 @@ class BBProductDetailViewController: UIViewController
         }
         else
         {
-            productRatingCountLabel.text = "No yer rated"
+            productRatingCountLabel.text = "Not yet rated"
         }
         
         onSaleView.isHidden = true

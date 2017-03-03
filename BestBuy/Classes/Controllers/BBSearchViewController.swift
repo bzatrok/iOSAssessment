@@ -55,6 +55,7 @@ class BBSearchViewController: UIViewController
         case showAllFromCategory
         case searching
         case noResults
+        case loadingNextPage
         
         static var count: Int
         {
@@ -114,6 +115,20 @@ class BBSearchViewController: UIViewController
         super.viewWillAppear(animated)
         
         setupView()
+        
+        navigationController?.setNavigationBarHidden(true, animated: true)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool)
+    {
+        super.viewWillDisappear(animated)
+        
+        navigationController?.setNavigationBarHidden(false, animated: true)
+    }
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle
+    {
+        return .lightContent
     }
     
     //MARK: Functions
@@ -152,6 +167,16 @@ class BBSearchViewController: UIViewController
         let selectedCategory    = BBFilterManager.shared.selectedTopLevelCategoryName != nil ? "the '\(BBFilterManager.shared.selectedTopLevelCategoryName!)' category" : "BestBuy's products"
         
         searchBar.prompt        = "Search among \(selectedCategory)"
+        searchBar.barTintColor  = BBColors.blue
+        
+        guard let statusBar = UIApplication.shared.value(forKeyPath: "statusBarWindow.statusBar") as? UIView,
+            let searchBarPromptLabel = searchBar.value(forKey: "promptLabel") as? UILabel else
+        {
+            return
+        }
+        
+        statusBar.backgroundColor       = BBColors.blue
+        searchBarPromptLabel.textColor  = UIColor.white
     }
     
     func setSearchButtonState(_ toState: BBSearchButtonState)
@@ -183,6 +208,10 @@ class BBSearchViewController: UIViewController
                     
                         self.searchButton.setTitle("No Results Found", for: .normal)
                         self.searchButton.setBackgroundImage(UIImage(color: BBColors.grey), for: .normal)
+                    
+                    case .loadingNextPage:
+                        self.searchButton.setTitle("Loading next page...", for: .normal)
+                        self.searchButton.setBackgroundImage(UIImage(color: BBColors.red), for: .normal)
                 }
             }
         }
@@ -267,6 +296,8 @@ extension BBSearchViewController: UISearchBarDelegate
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String)
     {
+        currentPageNumber = 1
+        
         guard searchText.characters.count == 0 else
         {
             return
@@ -289,15 +320,18 @@ extension BBSearchViewController: UIScrollViewDelegate
 {
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool)
     {
-        if ((tableView.contentOffset.y + tableView.frame.size.height) >= tableView.contentSize.height - productCellHeight)
+        if ((tableView.contentOffset.y + tableView.frame.size.height) >= tableView.contentSize.height - productCellHeight * 2)
         {
             if let searchBarText = searchBar.text, searchBarText.characters.count > 0, !isHTTPRequestInProgress
             {
                 isHTTPRequestInProgress = true
                 
+                setSearchButtonState(.loadingNextPage)
+                
                 BBRequestManager.shared.queryProducts(withSearchString: searchBarText, selectedCategoryID: BBFilterManager.shared.selectedTopLevelCategoryID, currentPageNumber: currentPageNumber) { [weak self] success, responseProductList in
                     
                     self?.isHTTPRequestInProgress = false
+                    self?.setSearchButtonState(.search)
                     
                     guard let strongSelf = self, let responseProductList = responseProductList, success else
                     {
@@ -307,7 +341,7 @@ extension BBSearchViewController: UIScrollViewDelegate
                     DispatchQueue.main.async {
                     
                         strongSelf.currentPageNumber += 1
-                        
+                        strongSelf.setSearchButtonState(.search)
                         strongSelf.tableView.beginUpdates()
                         
                         let insertIndex = strongSelf.productsList.count - 1
