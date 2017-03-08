@@ -35,11 +35,15 @@ class BBObjectFactory
             
             if let relatedProducts = productDictionary["relatedProducts"] as? [[String : AnyObject]], relatedProducts.count > 0
             {
+                //Use flatMap
+                
                 relatedProductSKUList   = relatedProducts.map{ if let sku = $0["sku"] as? Int { return sku }; return 0 }
             }
             
             if let accessoryProducts = productDictionary["accessories"] as? [[String : AnyObject]], accessoryProducts.count > 0
             {
+                //Use flatMap
+                
                 accessorySKUList        = accessoryProducts.map{ if let sku = $0["sku"] as? Int { return sku };  return 0 }
             }
             

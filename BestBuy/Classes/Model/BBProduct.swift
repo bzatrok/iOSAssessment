@@ -10,17 +10,17 @@ import Foundation
 
 class BBProduct : BBObject
 {
-    var sku : Int?
-    var regular_price : Double?
-    var sale_price : Double?
-    var image_URL : String?
-    var thumbnail_image_URL : String?
-    var short_description : String?
-    var customer_review_average : Double?
-    var customer_review_count : Int?
-    var on_sale : Bool?
-    var related_product_SKUs : [Int]?
-    var accessory_SKUs : [Int]?
+    let sku : Int?
+    let regular_price : Double?
+    let sale_price : Double?
+    let image_URL : String?
+    let thumbnail_image_URL : String?
+    let short_description : String?
+    let customer_review_average : Double?
+    let customer_review_count : Int?
+    let on_sale : Bool?
+    let related_product_SKUs : [Int]?
+    let accessory_SKUs : [Int]?
     
     init(_name: String,
          _sku: Int?,
@@ -35,8 +35,6 @@ class BBProduct : BBObject
          _related_product_SKUs: [Int]?,
          _accessory_SKUs: [Int]?)
     {
-        super.init(object_name: _name)
-        
         sku                     = _sku
         regular_price           = _regular_price
         sale_price              = _sale_price
@@ -48,5 +46,7 @@ class BBProduct : BBObject
         on_sale                 = _on_sale
         related_product_SKUs    = _related_product_SKUs
         accessory_SKUs          = _accessory_SKUs
+        
+        super.init(object_name: _name)
     }
 }

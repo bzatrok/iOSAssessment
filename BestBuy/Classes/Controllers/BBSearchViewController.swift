@@ -144,11 +144,8 @@ class BBSearchViewController: UIViewController
         
         //Add category filter button
         
-        //Disabled for now, BestBuy cannot filter products based on top level categories only
-        
-//        let categoriesButton = UIBarButtonItem(title: "Categories", style: .plain, target: self, action: #selector(categoriesButtonClicked))
-//        
-//        navigationItem.setRightBarButtonItems([categoriesButton], animated: true)
+        let categoriesButton = UIBarButtonItem(title: "Categories", style: .plain, target: self, action: #selector(categoriesButtonClicked))
+        navigationItem.setRightBarButtonItems([categoriesButton], animated: true)
     }
     
     func setupView()

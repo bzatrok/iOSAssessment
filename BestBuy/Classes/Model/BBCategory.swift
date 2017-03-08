@@ -10,13 +10,13 @@ import Foundation
 
 class BBCategory : BBObject
 {
-    var id : String?
+    let id : String?
     
     init(_name: String,
          _id: String?)
     {
-        super.init(object_name: _name)
-        
         id      = _id
+        
+        super.init(object_name: _name)
     }
 }

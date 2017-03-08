@@ -10,7 +10,7 @@ import Foundation
 
 class BBObject
 {
-    var name : String
+    let name : String
     
     init(object_name: String)
     {

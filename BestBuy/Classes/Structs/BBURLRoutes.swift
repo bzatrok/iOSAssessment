@@ -38,8 +38,22 @@ struct BBURLRoutes
     static func productSearchAPIURL(searchString: String?, selectedCategoryID: String?, currentPageNumber: Int) -> String
     {
         let selectedCategoryString  = selectedCategoryID != nil ? "(categoryPath.id=\(selectedCategoryID!))" : ""
-        let selectedSearchString    = searchString != nil ? "(search=\(searchString!))" : ""
+        var selectedSearchString    = String()
         let ampersand               = selectedCategoryString.characters.count > 0 && selectedSearchString.characters.count > 0 ? "&" : ""
+        
+        if let searchString = searchString
+        {
+            let multiwordSearchArray = searchString.components(separatedBy: " ")
+            
+            if multiwordSearchArray.count == 1
+            {
+                selectedSearchString = "(search=\(searchString))"
+            }
+            else if multiwordSearchArray.count > 1
+            {
+                selectedSearchString = multiwordSearchArray.map{ "(search=\($0))" }.joined(separator: "&")
+            }
+        }
         
         return "\(productsAPIURL)(\(selectedSearchString)\(ampersand)\(selectedCategoryString))?apiKey=\(BBConstants.APIKey)&sort=name.asc&show=name,categoryPath.id,categoryPath.name,shortDescription,sku,relatedProducts.sku,accessories.sku,thumbnailImage,image,customerReviewAverage,customerReviewCount,regularPrice,onSale,salePrice&pageSize=\(BBConstants.numberOfProductsPerPage)&format=json&page=\(currentPageNumber)"
     }
