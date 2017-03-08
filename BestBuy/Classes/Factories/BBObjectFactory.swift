@@ -14,53 +14,47 @@ class BBObjectFactory
     
     static func createProductsList(fromProductArray productArray: [[String : AnyObject]]) -> [BBProduct]
     {
-        var productsList : [BBProduct] = []
+        let productsList : [BBProduct] = productArray.flatMap{
         
-        for productDictionary in productArray
-        {
-            guard let name = productDictionary["name"] as? String else
+            guard let name = $0["name"] as? String else
             {
-                continue
+                return nil
             }
             
-            var short_description = productDictionary["shortDescription"] as? String != nil ? productDictionary["shortDescription"] as? String : ""
+            var short_description = $0["shortDescription"] as? String != nil ? $0["shortDescription"] as? String : ""
             
             if let short_desc = short_description
             {
                 short_description = short_desc.removeSpecialChars()
             }
             
-            var accessorySKUList        : [Int] = []
             var relatedProductSKUList   : [Int] = []
+            var accessorySKUList        : [Int] = []
             
-            if let relatedProducts = productDictionary["relatedProducts"] as? [[String : AnyObject]], relatedProducts.count > 0
+            if let relatedProducts = $0["relatedProducts"] as? [[String : AnyObject]], relatedProducts.count > 0
             {
-                //Use flatMap
-                
-                relatedProductSKUList   = relatedProducts.map{ if let sku = $0["sku"] as? Int { return sku }; return 0 }
+                relatedProductSKUList.append(contentsOf: relatedProducts.map { return $0["sku"] as? Int }.flatMap { $0 })
             }
             
-            if let accessoryProducts = productDictionary["accessories"] as? [[String : AnyObject]], accessoryProducts.count > 0
+            if let accessoryProducts = $0["accessories"] as? [[String : AnyObject]], accessoryProducts.count > 0
             {
-                //Use flatMap
-                
-                accessorySKUList        = accessoryProducts.map{ if let sku = $0["sku"] as? Int { return sku };  return 0 }
+                accessorySKUList = accessoryProducts.map { return $0["sku"] as? Int }.flatMap { $0 }
             }
             
             let productObject = BBProduct(_name: name.removeSpecialChars(),
-                                          _sku: productDictionary["sku"] as? Int,
-                                          _regular_price: productDictionary["regularPrice"] as? Double,
-                                          _sale_price: productDictionary["salePrice"] as? Double,
-                                          _image_URL: productDictionary["image"] as? String,
-                                          _thumbnail_image_URL: productDictionary["thumbnailImage"] as? String,
+                                          _sku: $0["sku"] as? Int,
+                                          _regular_price: $0["regularPrice"] as? Double,
+                                          _sale_price: $0["salePrice"] as? Double,
+                                          _image_URL: $0["image"] as? String,
+                                          _thumbnail_image_URL: $0["thumbnailImage"] as? String,
                                           _short_description: short_description,
-                                          _customer_review_average: productDictionary["customerReviewAverage"] as? Double,
-                                          _customer_review_count: productDictionary["customerReviewCount"] as? Int,
-                                          _on_sale: productDictionary["onSale"] as? Bool,
+                                          _customer_review_average: $0["customerReviewAverage"] as? Double,
+                                          _customer_review_count: $0["customerReviewCount"] as? Int,
+                                          _on_sale: $0["onSale"] as? Bool,
                                           _related_product_SKUs: relatedProductSKUList,
                                           _accessory_SKUs: accessorySKUList)
             
-            productsList.append(productObject)
+            return productObject
         }
         
         return productsList
@@ -70,19 +64,16 @@ class BBObjectFactory
     
     static func createCategoriesList(fromCategoriesArray categoriesArray: [[String : AnyObject]]) -> [BBCategory]
     {
-        var categoriesList : [BBCategory] = []
-        
-        for categoryDictionary in categoriesArray
-        {
-            guard let name = categoryDictionary["name"] as? String else
+        let categoriesList : [BBCategory] = categoriesArray.flatMap {
+
+            guard let name = $0["name"] as? String else
             {
-                continue
+                return nil
             }
             
-            let categoryObject = BBCategory(_name: name,
-                                          _id: categoryDictionary["id"] as? String)
+            let categoryObject = BBCategory(_name: name, _id: $0["id"] as? String)
             
-            categoriesList.append(categoryObject)
+            return categoryObject
         }
         
         return categoriesList
